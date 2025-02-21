@@ -19,8 +19,6 @@ async def lifespan(app: FastAPI):
     # --- Startup ---
     try:
         cred = credentials.Certificate('credentials.json')
-        print(cred)
-        print(settings.DATABASE_URL)
         firebase_app = firebase_admin.initialize_app(cred, {
             'databaseURL': settings.DATABASE_URL
         })
