@@ -11,3 +11,5 @@ wheels/
 .env
 *.log
 credentials.json
+
+.pytest_cache
