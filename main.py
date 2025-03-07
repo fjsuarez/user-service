@@ -1,11 +1,13 @@
-from fastapi import FastAPI, HTTPException, Request
+import os
 import httpx
+from fastapi import FastAPI, HTTPException
 from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
 from contextlib import asynccontextmanager
 import firebase_admin
 from firebase_admin import credentials, firestore
 from models import User
+from typing import List
 
 class Settings(BaseSettings):
     PORT: int
@@ -43,13 +45,18 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Error deleting Firebase Admin SDK app: {e}")
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    root_path="/users",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    lifespan=lifespan
+)
 
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
 
-# Python
 @app.get("/")
 async def get_users():
     docs = app.state.users_ref.stream()
@@ -100,4 +107,6 @@ async def create_user(user: User):
 
 if __name__ == "__main__":
     import uvicorn
+    print(f"PORT {settings.PORT}")
+    print(f"DATABASE_URL {settings.DATABASE_URL}")
     uvicorn.run(app, host="0.0.0.0", port=settings.PORT)
