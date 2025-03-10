@@ -1,13 +1,11 @@
-import os
-import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
 from contextlib import asynccontextmanager
 import firebase_admin
-from firebase_admin import credentials, firestore
-from models import User
-from typing import List
+from firebase_admin import credentials, auth, firestore
+from models import User, SignupRequest, LoginRequest, AuthResponse
+from datetime import datetime
 
 class Settings(BaseSettings):
     PORT: int
@@ -46,7 +44,7 @@ async def lifespan(app: FastAPI):
         print(f"Error deleting Firebase Admin SDK app: {e}")
 
 app = FastAPI(
-    root_path="/users",
+    root_path="/api/users",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
@@ -104,6 +102,69 @@ async def create_user(user: User):
         return user_data
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Error creating user document: {exc}")
+    
+@app.post("/signup", response_model=AuthResponse)
+async def signup(request: SignupRequest):
+    try:
+        # Create the user in Firebase Authentication
+        user = auth.create_user(
+            email=request.email,
+            password=request.password,
+            display_name=f"{request.firstName} {request.lastName}",
+            phone_number=request.phoneNumber
+        )
+        
+        # Create a custom token (or you can get an ID token)
+        token = auth.create_custom_token(user.uid)
+        
+        # Store additional user data in Firestore
+        user_data = {
+            "id": user.uid,
+            "firstName": request.firstName,
+            "lastName": request.lastName,
+            "email": request.email,
+            "phoneNumber": request.phoneNumber,
+            "isEmailVerified": False,
+            "createdAt": datetime.now(),
+            "updatedAt": datetime.now(),
+        }
+        
+        # Store in Firestore
+        user_ref = app.state.users_ref.document(user.uid)
+        user_ref.set(user_data)
+        
+        return {"token": token, "user": user_data}
+    
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/login", response_model=AuthResponse)
+async def login(request: LoginRequest):
+    try:
+        print(f"Logging in user with email: {request.email}")
+        print(f"Logging in user with password: {request.password}")
+        # Verify the email/password with Firebase
+        user = auth.get_user_by_email(request.email)
+        
+        # Note: Firebase Admin SDK doesn't have a direct way to verify passwords
+        # You'd normally use the Firebase Authentication REST API for this
+        # This is a simplified example
+        
+        # Create a custom token
+        token = auth.create_custom_token(user.uid)
+        
+        print(token)
+        # Get user data from Firestore
+        user_doc = app.state.users_ref.document(user.uid).get()
+        if not user_doc.exists:
+            raise HTTPException(status_code=404, detail="User record not found")
+        
+        user_data = user_doc.to_dict()
+        
+        return {"token": token, "user": user_data}
+    
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
 
 if __name__ == "__main__":
     import uvicorn

@@ -31,3 +31,18 @@ class User(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat(),
         }
+
+class SignupRequest(BaseModel):
+    email: str
+    password: str
+    firstName: str
+    lastName: str
+    phoneNumber: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class AuthResponse(BaseModel):
+    token: str
+    user: dict
