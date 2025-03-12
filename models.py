@@ -1,30 +1,33 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Literal
 
 class Vehicle(BaseModel):
-    vehicleId: str = Field(..., alias="vehicleId")
+    vehicleId: str
     make: str
     model: str
     year: int
     licensePlate: str
-    capacity: int
+    capacity: int = 4
 
 class Driver(BaseModel):
-    licenseNumber: str = ""
+    licenseNumber: str
     vehicles: List[Vehicle] = []
+    isActive: bool = True
 
 class User(BaseModel):
     id: str
-    lastName: str
     firstName: str
+    lastName: str
     email: str
     phoneNumber: str
     profilePictureURL: str | None = None
-    isEmailVerified: bool
+    isEmailVerified: bool = False
     createdAt: datetime
     updatedAt: datetime
-    driver: Driver | None = None
+    onboardingCompleted: bool = False
+    userType: Literal["rider", "driver"] = "rider"
+    driver: Driver | None = None 
 
     class Config:
         populate_by_name = True
@@ -37,7 +40,7 @@ class SignupRequest(BaseModel):
     password: str
     firstName: str
     lastName: str
-    phoneNumber: str
+    phoneNumber: str = ""
 
 class LoginRequest(BaseModel):
     email: str
@@ -46,3 +49,8 @@ class LoginRequest(BaseModel):
 class AuthResponse(BaseModel):
     token: str
     user: dict
+
+class OnboardingRequest(BaseModel):
+    isDriver: bool
+    userType: Literal["rider", "driver"] | None = None
+    driverDetails: Driver | None = None
