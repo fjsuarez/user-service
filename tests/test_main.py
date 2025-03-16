@@ -13,6 +13,6 @@ def test_health(client):
     assert response.json() == {"status": "ok"}
 
 def test_get_users(client):
-    response = client.get("/")
+    response = client.get("/all")
     assert response.status_code == 200
     # Validate schema
