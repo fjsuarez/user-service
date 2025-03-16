@@ -56,5 +56,5 @@ async def save_user(user_data, users_ref):
                 vehicle_ref.set(vehicle)
         
         return user_data
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Error saving user document: {exc}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving user document: {e}")

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from config import settings
 from firebase_client import lifespan
-from routes import auth_routes, user_routes
+from routes import user_routes
 
 app = FastAPI(
     root_path="/api/users",
@@ -17,7 +17,6 @@ async def health_check():
     return {"status": "ok"}
 
 # Include routers
-app.include_router(auth_routes.router, tags=["Authentication"])
 app.include_router(user_routes.router, tags=["Users"])
 
 if __name__ == "__main__":

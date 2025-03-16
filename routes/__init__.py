@@ -1,1 +1,1 @@
-from . import auth_routes, user_routes
+from . import user_routes

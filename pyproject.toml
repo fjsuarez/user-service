@@ -5,7 +5,7 @@ description = "Service with user endpoints"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi>=0.115.8",
+    "fastapi[standard]>=0.115.8",
     "firebase-admin>=6.6.0",
     "httpx>=0.28.1",
     "pydantic-settings>=2.7.1",
