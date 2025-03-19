@@ -58,3 +58,30 @@ async def save_user(user_data, users_ref):
         return user_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving user document: {e}")
+    
+async def update_user_profile(user_ref, updates, driver_details=None, vehicles=None):
+    """
+    Update a user's profile including driver details and vehicles if provided.
+    """
+    user_ref.update(updates)
+    
+    if driver_details:
+        driver_ref = user_ref.collection("driver").document("details")
+        driver_doc = driver_ref.get()
+        
+        if driver_doc.exists:
+            driver_ref.update(driver_details)
+        else:
+            driver_ref.set(driver_details)
+        
+        if vehicles:
+            for vehicle in vehicles:
+                vehicle_ref = driver_ref.collection("vehicles").document(vehicle.vehicleId)
+                vehicle_doc = vehicle_ref.get()
+                
+                if vehicle_doc.exists:
+                    vehicle_ref.update(vehicle.model_dump())
+                else:
+                    vehicle_ref.set(vehicle.model_dump())
+    
+    return await get_complete_user_data(user_ref, None)
